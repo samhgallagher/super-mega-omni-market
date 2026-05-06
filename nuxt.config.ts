@@ -1,9 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  ssr: true,
   runtimeConfig: {
     session: {
       password: process.env.NUXT_SESSION_PASSWORD || ''
-    }
+    },
+    dynamodbTableName: process.env.DYNAMODB_TABLE_NAME || '',
+    adminEmails: process.env.ADMIN_EMAILS || ''
   },
 
   colorMode: {

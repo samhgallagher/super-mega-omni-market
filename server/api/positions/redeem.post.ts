@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     TransactItems: [
       {
         Update: {
-          TableName: TABLE,
+          TableName: getTable(),
           Key: { PK: `USER#${session.user.userId}`, SK: `USER#${session.user.userId}` },
           UpdateExpression: 'SET balance = balance + :payout',
           ExpressionAttributeValues: { ':payout': payout }
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       },
       {
         Update: {
-          TableName: TABLE,
+          TableName: getTable(),
           Key: { PK: `USER#${session.user.userId}`, SK: `POS#MARKET#${marketId}#OUTCOME#${outcomeId}` },
           UpdateExpression: 'SET redeemed = :true',
           ConditionExpression: 'redeemed = :false',

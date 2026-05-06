@@ -1,5 +1,5 @@
 export function isAdminEmail(email: string): boolean {
-  const admins = (process.env.ADMIN_EMAILS ?? '')
+  const admins = (useRuntimeConfig().adminEmails ?? '')
     .split(',')
     .map(e => e.trim().toLowerCase())
     .filter(Boolean)

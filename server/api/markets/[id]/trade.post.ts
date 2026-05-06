@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
     TransactItems: [
       {
         Update: {
-          TableName: TABLE,
+          TableName: getTable(),
           Key: { PK: `MARKET#${id}`, SK: `MARKET#${id}` },
           UpdateExpression: 'SET outcomes = :outcomes',
           ExpressionAttributeValues: { ':outcomes': newOutcomes }
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
       },
       {
         Update: {
-          TableName: TABLE,
+          TableName: getTable(),
           Key: { PK: `USER#${session.user.userId}`, SK: `USER#${session.user.userId}` },
           UpdateExpression: 'SET balance = balance + :delta',
           ExpressionAttributeValues: { ':delta': balanceDelta }
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
       },
       {
         Update: {
-          TableName: TABLE,
+          TableName: getTable(),
           Key: { PK: `USER#${session.user.userId}`, SK: `POS#MARKET#${id}#OUTCOME#${outcomeId}` },
           UpdateExpression: 'SET #s = if_not_exists(#s, :zero) + :delta, marketId = :marketId, outcomeId = :outcomeId, redeemed = if_not_exists(redeemed, :false), GSI2PK = :gsiPK, GSI2SK = :gsiSK',
           ExpressionAttributeNames: { '#s': 'shares' },
@@ -85,7 +85,7 @@ export default defineEventHandler(async (event) => {
       },
       {
         Put: {
-          TableName: TABLE,
+          TableName: getTable(),
           Item: {
             PK: `MARKET#${id}`,
             SK: `HIST#${now}`,
@@ -95,7 +95,7 @@ export default defineEventHandler(async (event) => {
       },
       {
         Put: {
-          TableName: TABLE,
+          TableName: getTable(),
           Item: {
             PK: `MARKET#${id}`,
             SK: `ACT#${now}#${crypto.randomUUID().slice(0, 8)}`,
