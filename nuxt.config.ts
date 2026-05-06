@@ -1,5 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  runtimeConfig: {
+    session: {
+      password: process.env.NUXT_SESSION_PASSWORD || ''
+    }
+  },
+
   colorMode: {
     preference: 'light',
     fallback: 'light',
