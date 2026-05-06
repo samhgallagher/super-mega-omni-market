@@ -22,6 +22,10 @@ export default defineNuxtConfig({
     enabled: true
   },
 
+  nitro: {
+    preset: 'aws-amplify'
+  },
+
   css: ['~/assets/css/main.css'],
 
   compatibilityDate: '2025-01-15',
