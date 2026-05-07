@@ -3,6 +3,7 @@ definePageMeta({ middleware: 'admin' })
 useSeoMeta({ title: 'Admin — SMOM' })
 
 const { data: markets, refresh } = await useFetch('/api/admin/markets')
+const { data: pending } = await useFetch('/api/admin/markets/pending')
 
 const resolveModal = ref<{ open: boolean, market: NonNullable<typeof markets.value>[number] | null }>({
   open: false,
@@ -51,8 +52,14 @@ async function toggleHidden(market: NonNullable<typeof markets.value>[number]) {
   <UContainer class="py-8 flex flex-col gap-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold">Admin</h1>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
+        <UButton to="/admin/settings" label="Settings" color="neutral" variant="ghost" icon="i-lucide-settings" />
         <UButton to="/admin/categories" label="Categories" color="neutral" variant="outline" icon="i-lucide-tag" />
+        <UButton to="/admin/moderation" label="Moderation" color="neutral" variant="outline" icon="i-lucide-shield-check">
+          <template v-if="pending?.length" #trailing>
+            <UBadge :label="String(pending.length)" color="warning" variant="solid" size="xs" />
+          </template>
+        </UButton>
         <UButton to="/admin/markets/create" label="New Market" icon="i-lucide-plus" />
       </div>
     </div>

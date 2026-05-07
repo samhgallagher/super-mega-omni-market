@@ -11,6 +11,7 @@ interface Market {
   liquidity: number
   resolved: boolean
   outcomes: Outcome[]
+  feePercent?: number
 }
 
 const props = defineProps<{ market: Market, userPositions?: Record<string, number> }>()
@@ -38,6 +39,15 @@ const costPreview = computed(() => {
   return tradeCost(currentShares.value, outcomeIndex.value, delta, props.market.liquidity)
 })
 
+const feePreview = computed(() => {
+  const pct = props.market.feePercent ?? 0
+  return pct > 0 ? Math.abs(costPreview.value) * pct / 100 : 0
+})
+
+const totalCostPreview = computed(() =>
+  Math.abs(costPreview.value) + feePreview.value
+)
+
 const newPricePreview = computed(() => {
   if (!selectedOutcome.value || sharesInput.value <= 0) return selectedOutcome.value?.price ?? 0
   const newShares = [...currentShares.value]
@@ -49,7 +59,7 @@ const heldShares = computed(() => props.userPositions?.[selectedOutcomeId.value]
 
 const canAfford = computed(() => {
   if (tradeType.value === 'sell') return heldShares.value >= sharesInput.value
-  return (user.value?.balance ?? 0) >= costPreview.value
+  return (user.value?.balance ?? 0) >= totalCostPreview.value
 })
 
 watch(tradeType, () => { error.value = '' })
@@ -129,13 +139,17 @@ async function executeTrade() {
           <span class="text-muted">{{ tradeType === 'buy' ? 'Cost' : 'Proceeds' }}</span>
           <span class="font-semibold tabular-nums">¤{{ Math.abs(costPreview).toFixed(2) }}</span>
         </div>
+        <div v-if="feePreview > 0" class="flex justify-between">
+          <span class="text-muted">Creator fee ({{ market.feePercent }}%)</span>
+          <span class="font-semibold tabular-nums text-warning">¤{{ feePreview.toFixed(2) }}</span>
+        </div>
         <div class="flex justify-between">
           <span class="text-muted">New probability</span>
           <span class="font-semibold tabular-nums">{{ (newPricePreview * 100).toFixed(1) }}%</span>
         </div>
         <div class="flex justify-between border-t border-(--ui-border) pt-1.5 mt-0.5">
           <span class="text-muted">Your balance</span>
-          <span class="font-semibold tabular-nums">¤{{ user?.balance.toLocaleString() }}</span>
+          <span class="font-semibold tabular-nums">¤{{ formatBalance(user?.balance ?? 0) }}</span>
         </div>
       </div>
 

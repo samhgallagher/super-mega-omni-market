@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
 
   let items = await dbQueryGSI('GSI1', 'MARKETS', 'GSI1PK') as Array<Record<string, unknown>>
 
-  items = items.filter(m => !m.hidden)
+  items = items.filter(m => !m.hidden && (m.type !== 'community' || m.status === 'active'))
 
   if (category) {
     items = items.filter(m => m.category === category)
@@ -22,6 +22,10 @@ export default defineEventHandler(async (event) => {
       resolved: market.resolved ?? false,
       resolvedOutcomeId: market.resolvedOutcomeId ?? null,
       createdAt: market.createdAt,
+      type: market.type ?? 'admin',
+      creatorId: market.creatorId ?? null,
+      creatorUsername: market.creatorUsername ?? null,
+      creatorPhoto: market.creatorPhoto ?? null,
       outcomes: outcomes.map((o, i) => ({ ...o, price: prices[i] }))
     }
   })

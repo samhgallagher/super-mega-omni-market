@@ -14,10 +14,11 @@ const rankLabel: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
       <div v-if="!entries?.length" class="p-8 text-sm text-muted text-center">
         No users yet.
       </div>
-      <div
+      <NuxtLink
         v-for="entry in entries"
         :key="entry.userId"
-        class="flex items-center gap-4 px-4 py-3 transition-colors"
+        :to="`/users/${entry.userId}`"
+        class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-(--ui-bg-elevated) group"
         :class="entry.isCurrentUser ? 'bg-primary/5' : ''"
       >
         <div class="w-8 text-center shrink-0">
@@ -28,12 +29,12 @@ const rankLabel: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
         <UAvatar :src="entry.photo ?? undefined" :alt="entry.username" size="sm" />
 
         <div class="flex-1 min-w-0 flex items-center gap-2">
-          <span class="text-sm font-medium truncate">{{ entry.username }}</span>
+          <span class="text-sm font-medium truncate group-hover:underline">{{ entry.username }}</span>
           <UBadge v-if="entry.isCurrentUser" label="you" color="primary" variant="soft" size="xs" />
         </div>
 
-        <span class="text-sm font-semibold tabular-nums shrink-0">¤{{ entry.balance.toLocaleString() }}</span>
-      </div>
+        <span class="text-sm font-semibold tabular-nums shrink-0">¤{{ formatBalance(entry.balance) }}</span>
+      </NuxtLink>
     </div>
   </UContainer>
 </template>

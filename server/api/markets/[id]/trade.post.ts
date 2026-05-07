@@ -25,13 +25,17 @@ export default defineEventHandler(async (event) => {
   const delta = type === 'buy' ? shares : -shares
   const tradeAmount = tradeCost(currentShares, outcomeIndex, delta, liquidity)
 
+  const feePercent = market.type === 'community' ? ((market.feePercent as number) ?? 0) : 0
+  const fee = feePercent > 0 ? Math.round(Math.abs(tradeAmount) * feePercent) / 100 : 0
+  const balanceDelta = Math.round(-(tradeAmount + fee) * 100) / 100
+
   const user = await dbGet(`USER#${session.user.userId}`, `USER#${session.user.userId}`)
   if (!user) throw createError({ statusCode: 404, message: 'User not found.' })
 
   const balance = user.balance as number
 
   if (type === 'buy') {
-    if (balance < tradeAmount) throw createError({ statusCode: 400, message: 'Insufficient balance.' })
+    if (balance < tradeAmount + fee) throw createError({ statusCode: 400, message: 'Insufficient balance.' })
   }
 
   if (type === 'sell') {
@@ -46,7 +50,13 @@ export default defineEventHandler(async (event) => {
   const newOutcomes = outcomes.map((o, i) => ({ ...o, shares: newShares[i] }))
   const newPrices = computePrices(newShares, liquidity)
   const now = Date.now()
-  const balanceDelta = type === 'buy' ? -tradeAmount : -tradeAmount // tradeAmount is negative when selling
+
+  const marketUpdateExpression = fee > 0
+    ? 'SET outcomes = :outcomes, accruedFees = if_not_exists(accruedFees, :zero) + :fee'
+    : 'SET outcomes = :outcomes'
+  const marketExpressionValues: Record<string, unknown> = fee > 0
+    ? { ':outcomes': newOutcomes, ':zero': 0, ':fee': fee }
+    : { ':outcomes': newOutcomes }
 
   await db.send(new TransactWriteCommand({
     TransactItems: [
@@ -54,8 +64,8 @@ export default defineEventHandler(async (event) => {
         Update: {
           TableName: getTable(),
           Key: { PK: `MARKET#${id}`, SK: `MARKET#${id}` },
-          UpdateExpression: 'SET outcomes = :outcomes',
-          ExpressionAttributeValues: { ':outcomes': newOutcomes }
+          UpdateExpression: marketUpdateExpression,
+          ExpressionAttributeValues: marketExpressionValues
         }
       },
       {
@@ -117,6 +127,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     cost: tradeAmount,
+    fee,
     newBalance,
     outcomes: newOutcomes.map((o, i) => ({ ...o, price: newPrices[i] }))
   }

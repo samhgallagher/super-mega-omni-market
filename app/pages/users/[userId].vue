@@ -1,47 +1,35 @@
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+const route = useRoute()
+const userId = route.params.userId as string
 
-useSeoMeta({ title: 'My Positions — SMOM' })
+const { data, error: fetchError } = await useFetch(`/api/users/${userId}/positions`)
 
-const { fetch: refreshSession } = useUserSession()
-
-const { data: positions, refresh } = await useFetch('/api/positions')
-
-const claimable = computed(() => positions.value?.filter(p => p.won && !p.redeemed) ?? [])
-const active = computed(() => positions.value?.filter(p => !p.resolved) ?? [])
-const settled = computed(() => positions.value?.filter(p => p.resolved && (!p.won || p.redeemed)) ?? [])
-
-const redeeming = ref<string | null>(null)
-const error = ref('')
-
-async function redeem(marketId: string, outcomeId: string) {
-  const key = `${marketId}#${outcomeId}`
-  redeeming.value = key
-  error.value = ''
-  try {
-    await $fetch('/api/positions/redeem', { method: 'POST', body: { marketId, outcomeId } })
-    await Promise.all([refresh(), refreshSession()])
-  }
-  catch (e: any) {
-    error.value = e.data?.message ?? 'Something went wrong.'
-  }
-  finally {
-    redeeming.value = null
-  }
+if (fetchError.value) {
+  throw createError({ statusCode: 404, message: 'User not found.' })
 }
+
+useSeoMeta({ title: () => data.value ? `${data.value.username}'s Positions — SMOM` : 'Positions — SMOM' })
+
+const positions = computed(() => data.value?.positions ?? [])
+const active = computed(() => positions.value.filter(p => !p.resolved))
+const claimable = computed(() => positions.value.filter(p => p.won && !p.redeemed))
+const settled = computed(() => positions.value.filter(p => p.resolved && (!p.won || p.redeemed)))
 </script>
 
 <template>
   <UContainer class="py-8 flex flex-col gap-8">
-    <h1 class="text-2xl font-bold">My Positions</h1>
+    <div class="flex items-center gap-4">
+      <UAvatar :src="data?.photo ?? undefined" :alt="data?.username" size="lg" />
+      <div>
+        <h1 class="text-2xl font-bold">{{ data?.username }}</h1>
+        <p class="text-sm text-muted">Positions</p>
+      </div>
+    </div>
 
-    <UAlert v-if="error" color="error" variant="soft" :description="error" />
-
-    <div v-if="!positions?.length" class="flex flex-col items-center justify-center py-24 gap-3 text-center">
+    <div v-if="!positions.length" class="flex flex-col items-center justify-center py-24 gap-3 text-center">
       <UIcon name="i-lucide-wallet" class="size-10 text-muted" />
       <p class="font-medium">No positions yet</p>
-      <p class="text-sm text-muted">Buy shares in a market to see your positions here.</p>
-      <UButton to="/" label="Browse markets" class="mt-2" />
+      <p class="text-sm text-muted">This user hasn't bought any shares yet.</p>
     </div>
 
     <template v-else>
@@ -59,12 +47,6 @@ async function redeem(marketId: string, outcomeId: string) {
               <p class="text-sm font-semibold text-success tabular-nums">+¤{{ formatBalance(pos.payout) }}</p>
               <UBadge label="Won" color="success" variant="soft" size="xs" />
             </div>
-            <UButton
-              label="Claim"
-              size="sm"
-              :loading="redeeming === `${pos.marketId}#${pos.outcomeId}`"
-              @click="redeem(pos.marketId, pos.outcomeId)"
-            />
           </div>
         </div>
       </section>

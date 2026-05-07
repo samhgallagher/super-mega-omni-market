@@ -2,6 +2,7 @@
 defineProps<{
   activity: Array<{
     timestamp: number
+    userId: string
     username: string
     photo: string | null
     outcomeLabel: string
@@ -26,12 +27,12 @@ function timeAgo(epoch: number): string {
     <div v-for="(item, i) in activity" :key="i" class="flex items-center gap-3 py-3 px-1">
       <UAvatar :src="item.photo ?? undefined" :alt="item.username" size="xs" class="shrink-0" />
       <div class="flex-1 min-w-0 text-sm">
-        <span class="font-medium">{{ item.username }}</span>
+        <NuxtLink :to="`/users/${item.userId}`" class="font-medium hover:underline">{{ item.username }}</NuxtLink>
         <span class="text-muted">
           {{ item.type === 'buy' ? ' bought ' : ' sold ' }}
         </span>
         <span class="font-medium tabular-nums">{{ item.shares }}</span>
-        <span class="text-muted"> {{ item.shares === 1 ? 'share' : 'shares' }} of </span>
+        <span class="text-muted"> {{ item.shares === 1 ? ' share' : ' shares' }} of </span>
         <span class="font-medium">{{ item.outcomeLabel }}</span>
       </div>
       <span class="text-xs text-muted shrink-0">{{ timeAgo(item.timestamp) }}</span>

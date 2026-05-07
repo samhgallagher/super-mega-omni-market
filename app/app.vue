@@ -4,7 +4,7 @@ const { loggedIn, user, fetch: refreshSession } = useUserSession()
 
 // Refresh session from DB if photo is missing (stale session from before photo was added)
 onMounted(async () => {
-  if (loggedIn.value && user.value?.photo === undefined) {
+  if (loggedIn.value) {
     await $fetch('/api/auth/me')
     await refreshSession()
   }
@@ -41,6 +41,7 @@ async function signOut() {
       <template #right>
         <UButton label="Markets" to="/" color="neutral" variant="ghost" />
         <UButton label="Leaderboard" to="/leaderboard" color="neutral" variant="ghost" />
+        <UButton label="Create Market" to="/markets/create" icon="i-lucide-plus" color="neutral" variant="ghost" class="hover:text-primary transition-colors" />
 
         <div class="h-5 w-px bg-(--ui-border) mx-1" />
 
@@ -52,7 +53,7 @@ async function signOut() {
             <UAvatar :src="user.photo ?? undefined" :alt="user.username" size="sm" />
             <div class="leading-tight text-left">
               <p class="text-sm font-medium">{{ user.username }}</p>
-              <p class="text-xs text-muted tabular-nums">¤{{ user.balance.toLocaleString() }}</p>
+              <p class="text-xs text-muted tabular-nums">¤{{ formatBalance(user.balance) }}</p>
             </div>
           </button>
           <UButton label="My Positions" to="/positions" color="neutral" variant="ghost" />

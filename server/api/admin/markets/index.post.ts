@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
   await dbPut({
     PK: `MARKET#${marketId}`,
     SK: `MARKET#${marketId}`,
+    type: 'admin',
     title: title.trim(),
     description: description?.trim() || undefined,
     category,

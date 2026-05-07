@@ -6,7 +6,8 @@ const { data } = useFetch('/api/categories')
 
 const categories = computed(() => [
   { slug: 'all', label: 'All' },
-  ...(data.value ?? [])
+  ...(data.value ?? []),
+  { slug: 'community', label: 'Community' }
 ])
 
 const active = computed(() => (route.query.category as string) || 'all')
