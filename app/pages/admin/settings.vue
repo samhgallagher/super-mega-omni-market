@@ -11,7 +11,9 @@ const state = reactive({
   scratcherWinOdds: settings.value?.scratcherWinOdds ?? 0.30,
   scratcherJackpotOdds: settings.value?.scratcherJackpotOdds ?? 0.002,
   scratcherWinMultiplier: settings.value?.scratcherWinMultiplier ?? 3,
-  scratcherJackpotMultiplier: settings.value?.scratcherJackpotMultiplier ?? 100
+  scratcherJackpotMultiplier: settings.value?.scratcherJackpotMultiplier ?? 100,
+  scratcherFreeWinPrize: settings.value?.scratcherFreeWinPrize ?? 15,
+  scratcherFreeJackpotPrize: settings.value?.scratcherFreeJackpotPrize ?? 1500
 })
 
 const loading = ref(false)
@@ -99,6 +101,18 @@ async function save() {
         <UFormField label="Jackpot Multiplier" hint="Jackpot prize = ticket price × this">
           <UInput v-model.number="state.scratcherJackpotMultiplier" type="number" :min="0" step="1" class="w-full">
             <template #trailing><span class="text-muted text-sm">×</span></template>
+          </UInput>
+        </UFormField>
+
+        <UFormField label="Free Daily Win Prize" hint="Prize for the guaranteed daily free scratcher">
+          <UInput v-model.number="state.scratcherFreeWinPrize" type="number" :min="0" step="1" class="w-full">
+            <template #leading><span class="text-muted text-sm">¤</span></template>
+          </UInput>
+        </UFormField>
+
+        <UFormField label="Free Daily Jackpot Prize" hint="Jackpot prize for the free scratcher (uses jackpot odds above)">
+          <UInput v-model.number="state.scratcherFreeJackpotPrize" type="number" :min="0" step="1" class="w-full">
+            <template #leading><span class="text-muted text-sm">¤</span></template>
           </UInput>
         </UFormField>
 

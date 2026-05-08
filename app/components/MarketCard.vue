@@ -9,6 +9,10 @@ defineProps<{
     resolved: boolean
     resolvedOutcomeId: string | null
     outcomes: Array<{ id: string, label: string, price: number }>
+    type?: string
+    creatorId?: string | null
+    creatorUsername?: string | null
+    creatorPhoto?: string | null
   }
 }>()
 
@@ -62,9 +66,15 @@ function formatDate(epoch: number) {
           </div>
         </div>
 
-        <p class="text-xs text-muted">
-          {{ market.expiresAt ? `Expires ${formatDate(market.expiresAt)}` : 'No expiry' }}
-        </p>
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-muted">
+            {{ market.expiresAt ? `Expires ${formatDate(market.expiresAt)}` : 'No expiry' }}
+          </p>
+          <div v-if="market.type === 'community' && market.creatorUsername" class="flex items-center gap-1 shrink-0">
+            <UAvatar :src="market.creatorPhoto ?? undefined" :alt="market.creatorUsername" size="2xs" />
+            <span class="text-xs text-muted truncate max-w-24">{{ market.creatorUsername }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </NuxtLink>

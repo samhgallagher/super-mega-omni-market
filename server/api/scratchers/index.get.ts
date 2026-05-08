@@ -9,7 +9,9 @@ export default defineEventHandler(async (event) => {
   const today = new Date().toISOString().split('T')[0]
   const allTickets = await dbQuery(`USER#${session.user.userId}`, 'SCRATCH#') as Array<Record<string, unknown>>
 
-  const ticketsToday = allTickets.filter(t => t.createdDate === today).length
+  const todayTickets = allTickets.filter(t => t.createdDate === today)
+  const ticketsToday = todayTickets.filter(t => !t.free).length
+  const usedFreeToday = todayTickets.some(t => t.free === true)
   const unscratched = allTickets
     .filter(t => !t.scratched)
     .sort((a, b) => (b.createdAt as number) - (a.createdAt as number))
@@ -20,5 +22,5 @@ export default defineEventHandler(async (event) => {
       createdAt: t.createdAt as number
     }))
 
-  return { ticketsToday, settings, unscratched }
+  return { ticketsToday, usedFreeToday, settings, unscratched }
 })

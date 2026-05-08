@@ -11,6 +11,7 @@ const ticketsToday = computed(() => data.value?.ticketsToday ?? 0)
 const dailyLimit = computed(() => settings.value?.scratcherDailyLimit ?? 3)
 const unscratched = computed(() => data.value?.unscratched ?? [])
 const remaining = computed(() => Math.max(0, dailyLimit.value - ticketsToday.value))
+const usedFreeToday = computed(() => data.value?.usedFreeToday ?? false)
 
 const TIERS: Array<{ price: number, name: string, emoji: string, tagline: string }> = [
   { price: 10, name: "Grandpa's Holidy Scratcher", emoji: '👴', tagline: 'One for every grandchild' },
@@ -29,7 +30,7 @@ function jackpotPrize(tier: number) {
 const activeTicket = ref<{ id: string, tier: number, symbols: [string, string, string] } | null>(null)
 const revealedCells = ref([false, false, false])
 const result = ref<{ outcome: string, payout: number } | null>(null)
-const buying = ref<number | null>(null)
+const buying = ref<number | 'free' | null>(null)
 const buyError = ref('')
 const revealing = ref(false)
 
@@ -48,6 +49,22 @@ async function buy(tier: number) {
     await refreshSession()
     await refresh()
     activeTicket.value = { id: ticket.id, tier: ticket.tier, symbols: ticket.symbols }
+    revealedCells.value = [false, false, false]
+    result.value = null
+    scrollToScratch()
+  }
+  catch (e: any) { buyError.value = e.data?.message ?? 'Something went wrong.' }
+  finally { buying.value = null }
+}
+
+async function claimFree() {
+  if (!loggedIn.value) { openAuth('signin'); return }
+  buying.value = 'free'
+  buyError.value = ''
+  try {
+    const ticket = await $fetch('/api/scratchers/buy-free', { method: 'POST' })
+    await refresh()
+    activeTicket.value = { id: ticket.id, tier: 0, symbols: ticket.symbols }
     revealedCells.value = [false, false, false]
     result.value = null
     scrollToScratch()
@@ -102,7 +119,7 @@ function closeResult() {
     <div v-if="unscratched.length" class="flex flex-col gap-3">
       <h2 class="text-sm font-semibold uppercase tracking-wide text-muted">Unscratched</h2>
       <div class="flex flex-wrap gap-2">
-        <UButton v-for="t in unscratched" :key="t.id" :label="`¤${t.tier} — unscratched`" icon="i-lucide-ticket"
+        <UButton v-for="t in unscratched" :key="t.id" :label="t.tier === 0 ? 'Lucky Dip — unscratched' : `¤${t.tier} — unscratched`" icon="i-lucide-ticket"
           color="warning" variant="soft" size="sm" @click="openUnscratched(t)" />
       </div>
     </div>
@@ -111,8 +128,7 @@ function closeResult() {
     <div v-if="activeTicket" ref="scratchRef"
       class="rounded-xl border-2 border-(--ui-border) p-6 flex flex-col items-center gap-6 bg-(--ui-bg-elevated)">
       <div class="text-center">
-        <p class="text-xs uppercase tracking-widest text-muted mb-1">{{TIERS.find(t => t.price ===
-          activeTicket!.tier)?.name ?? `¤${activeTicket.tier} Scratcher`}}</p>
+        <p class="text-xs uppercase tracking-widest text-muted mb-1">{{ activeTicket.tier === 0 ? "Today's Lucky Dip" : (TIERS.find(t => t.price === activeTicket!.tier)?.name ?? `¤${activeTicket.tier} Scratcher`) }}</p>
         <p class="text-sm text-muted">
           {{ revealedCells.every(Boolean) ? (revealing ? 'Calculating...' : '') : 'Scratch all three panels to reveal'
           }}
@@ -152,6 +168,33 @@ function closeResult() {
 
     <!-- Ticket shop -->
     <div v-if="!activeTicket || result" class="flex flex-col gap-4">
+      <!-- Free daily ticket -->
+      <div class="rounded-xl border-2 border-success/40 bg-success/5 p-5 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <span class="text-3xl">🍀</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="font-bold">Today's Lucky Dip</p>
+              <UBadge label="FREE" color="success" variant="soft" size="xs" />
+            </div>
+            <div class="flex gap-3 mt-1.5 text-xs text-muted">
+              <span>Win <span class="font-semibold text-foreground">¤{{ formatBalance(settings?.scratcherFreeWinPrize ?? 15) }}</span></span>
+              <span>·</span>
+              <span>Jackpot <span class="font-semibold text-foreground">¤{{ formatBalance(settings?.scratcherFreeJackpotPrize ?? 1500) }}</span></span>
+            </div>
+          </div>
+        </div>
+        <UButton
+          :label="usedFreeToday ? 'Claimed' : 'Scratch'"
+          :disabled="usedFreeToday || !loggedIn"
+          :loading="buying === 'free'"
+          color="success"
+          :variant="usedFreeToday ? 'soft' : 'solid'"
+          class="shrink-0"
+          @click="claimFree"
+        />
+      </div>
+
       <h2 class="text-sm font-semibold uppercase tracking-wide text-muted">Ticket Shop</h2>
 
       <UAlert v-if="buyError" color="error" variant="soft" :description="buyError" />

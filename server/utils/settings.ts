@@ -7,6 +7,8 @@ export async function getSettings() {
     scratcherWinOdds: (item?.scratcherWinOdds as number) ?? 0.30,
     scratcherJackpotOdds: (item?.scratcherJackpotOdds as number) ?? 0.002,
     scratcherWinMultiplier: (item?.scratcherWinMultiplier as number) ?? 3,
-    scratcherJackpotMultiplier: (item?.scratcherJackpotMultiplier as number) ?? 100
+    scratcherJackpotMultiplier: (item?.scratcherJackpotMultiplier as number) ?? 100,
+    scratcherFreeWinPrize: (item?.scratcherFreeWinPrize as number) ?? 15,
+    scratcherFreeJackpotPrize: (item?.scratcherFreeJackpotPrize as number) ?? 1500
   }
 }

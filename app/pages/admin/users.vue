@@ -4,6 +4,7 @@ useSeoMeta({ title: 'Users — Admin' })
 
 const { data: users, refresh } = await useFetch('/api/admin/users')
 
+// ── Password reset ──────────────────────────────────────────
 const resetModal = ref<{ open: boolean, userId: string, username: string } | null>(null)
 const resetPassword = ref('')
 const resetting = ref(false)
@@ -31,18 +32,80 @@ async function submitReset() {
   finally { resetting.value = false }
 }
 
+// ── Ban ─────────────────────────────────────────────────────
 const togglingId = ref<string | null>(null)
 
 async function toggleBan(userId: string, currentlyBanned: boolean) {
   togglingId.value = userId
   try {
-    await $fetch(`/api/admin/users/${userId}/ban`, {
-      method: 'POST',
-      body: { banned: !currentlyBanned }
-    })
+    await $fetch(`/api/admin/users/${userId}/ban`, { method: 'POST', body: { banned: !currentlyBanned } })
     await refresh()
   }
   finally { togglingId.value = null }
+}
+
+// ── Manage modal ─────────────────────────────────────────────
+type UserRow = NonNullable<typeof users.value>[number]
+
+const manageModal = ref(false)
+const managingUser = ref<UserRow | null>(null)
+const manageError = ref('')
+
+const scratcherData = ref<{
+  paidUsedToday: number
+  dailyLimit: number
+  usedFreeToday: boolean
+  paidTicketIds: string[]
+  freeTicketId: string | null
+} | null>(null)
+const scratcherLoading = ref(false)
+
+const balanceInput = ref(0)
+const savingBalance = ref(false)
+const resettingScratchers = ref<'paid' | 'free' | null>(null)
+
+async function openManage(user: UserRow) {
+  managingUser.value = user
+  balanceInput.value = user.balance
+  manageError.value = ''
+  scratcherData.value = null
+  manageModal.value = true
+  scratcherLoading.value = true
+  try {
+    scratcherData.value = await $fetch(`/api/admin/users/${user.userId}/scratchers`)
+  }
+  finally { scratcherLoading.value = false }
+}
+
+async function saveBalance() {
+  if (!managingUser.value) return
+  savingBalance.value = true
+  manageError.value = ''
+  try {
+    const { balance } = await $fetch(`/api/admin/users/${managingUser.value.userId}/balance`, {
+      method: 'PATCH',
+      body: { balance: balanceInput.value }
+    })
+    managingUser.value = { ...managingUser.value, balance }
+    await refresh()
+  }
+  catch (e: any) { manageError.value = e.data?.message ?? 'Something went wrong.' }
+  finally { savingBalance.value = false }
+}
+
+async function resetScratchers(type: 'paid' | 'free') {
+  if (!managingUser.value) return
+  resettingScratchers.value = type
+  manageError.value = ''
+  try {
+    await $fetch(`/api/admin/users/${managingUser.value.userId}/scratchers/reset`, {
+      method: 'POST',
+      body: { type }
+    })
+    scratcherData.value = await $fetch(`/api/admin/users/${managingUser.value.userId}/scratchers`)
+  }
+  catch (e: any) { manageError.value = e.data?.message ?? 'Something went wrong.' }
+  finally { resettingScratchers.value = null }
 }
 
 function formatDate(epoch: number) {
@@ -78,6 +141,14 @@ function formatDate(epoch: number) {
 
         <div class="flex items-center gap-2 shrink-0">
           <UButton
+            label="Manage"
+            size="sm"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-settings-2"
+            @click="openManage(user)"
+          />
+          <UButton
             label="Reset password"
             size="sm"
             color="neutral"
@@ -97,6 +168,98 @@ function formatDate(epoch: number) {
       </div>
     </div>
 
+    <!-- Manage modal -->
+    <UModal v-model:open="manageModal">
+      <template #content>
+        <div v-if="managingUser" class="p-6 flex flex-col gap-5">
+          <div class="flex items-center gap-3">
+            <UAvatar :src="managingUser.photo ?? undefined" :alt="managingUser.username" size="sm" />
+            <div>
+              <p class="font-semibold">{{ managingUser.username }}</p>
+              <p class="text-xs text-muted">{{ managingUser.email }}</p>
+            </div>
+          </div>
+
+          <UAlert v-if="manageError" color="error" variant="soft" :description="manageError" />
+
+          <!-- Balance -->
+          <div class="flex flex-col gap-3">
+            <p class="text-sm font-medium">Balance</p>
+            <div class="flex gap-2">
+              <UInput
+                v-model.number="balanceInput"
+                type="number"
+                :min="0"
+                step="0.01"
+                class="flex-1"
+              >
+                <template #leading><span class="text-muted text-sm">¤</span></template>
+              </UInput>
+              <UButton
+                label="Save"
+                :loading="savingBalance"
+                @click="saveBalance"
+              />
+            </div>
+            <p class="text-xs text-muted">Current: ¤{{ formatBalance(managingUser.balance) }}</p>
+          </div>
+
+          <!-- Scratchers -->
+          <div class="flex flex-col gap-3">
+            <p class="text-sm font-medium">Today's Scratchers</p>
+
+            <div v-if="scratcherLoading" class="text-sm text-muted">Loading...</div>
+            <template v-else-if="scratcherData">
+              <div class="rounded-lg border border-(--ui-border) divide-y divide-(--ui-border)">
+                <!-- Paid -->
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p class="text-sm">Paid scratchers used</p>
+                    <p class="text-xs text-muted mt-0.5">
+                      {{ scratcherData.paidUsedToday }} / {{ scratcherData.dailyLimit }} used today
+                    </p>
+                  </div>
+                  <UButton
+                    label="Reset"
+                    size="sm"
+                    color="neutral"
+                    variant="outline"
+                    :disabled="scratcherData.paidUsedToday === 0"
+                    :loading="resettingScratchers === 'paid'"
+                    @click="resetScratchers('paid')"
+                  />
+                </div>
+
+                <!-- Free -->
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p class="text-sm">Free daily scratcher</p>
+                    <p class="text-xs text-muted mt-0.5">
+                      {{ scratcherData.usedFreeToday ? 'Claimed today' : 'Not yet claimed' }}
+                    </p>
+                  </div>
+                  <UButton
+                    label="Reset"
+                    size="sm"
+                    color="neutral"
+                    variant="outline"
+                    :disabled="!scratcherData.usedFreeToday"
+                    :loading="resettingScratchers === 'free'"
+                    @click="resetScratchers('free')"
+                  />
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="flex justify-end">
+            <UButton label="Close" color="neutral" variant="ghost" @click="manageModal = false" />
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Password reset modal -->
     <UModal v-if="resetModal" v-model:open="resetModal.open">
       <template #content>
         <div class="p-6 flex flex-col gap-4">

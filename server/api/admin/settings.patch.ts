@@ -9,7 +9,9 @@ export default defineEventHandler(async (event) => {
     scratcherWinOdds: (current?.scratcherWinOdds as number) ?? 0.30,
     scratcherJackpotOdds: (current?.scratcherJackpotOdds as number) ?? 0.002,
     scratcherWinMultiplier: (current?.scratcherWinMultiplier as number) ?? 3,
-    scratcherJackpotMultiplier: (current?.scratcherJackpotMultiplier as number) ?? 100
+    scratcherJackpotMultiplier: (current?.scratcherJackpotMultiplier as number) ?? 100,
+    scratcherFreeWinPrize: (current?.scratcherFreeWinPrize as number) ?? 15,
+    scratcherFreeJackpotPrize: (current?.scratcherFreeJackpotPrize as number) ?? 1500
   }
 
   const numericFields: Array<[keyof typeof base, number, number]> = [
@@ -19,7 +21,9 @@ export default defineEventHandler(async (event) => {
     ['scratcherWinOdds', 0, 1],
     ['scratcherJackpotOdds', 0, 1],
     ['scratcherWinMultiplier', 0, Infinity],
-    ['scratcherJackpotMultiplier', 0, Infinity]
+    ['scratcherJackpotMultiplier', 0, Infinity],
+    ['scratcherFreeWinPrize', 0, Infinity],
+    ['scratcherFreeJackpotPrize', 0, Infinity]
   ]
 
   for (const [field, min, max] of numericFields) {
