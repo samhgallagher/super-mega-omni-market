@@ -41,6 +41,7 @@ async function signOut() {
       <template #right>
         <UButton label="Markets" to="/" color="neutral" variant="ghost" />
         <UButton label="Leaderboard" to="/leaderboard" color="neutral" variant="ghost" />
+        <UButton label="Scratchers" to="/scratchers" icon="i-lucide-ticket" color="neutral" variant="ghost" class="hover:text-primary transition-colors" />
         <UButton label="Create Market" to="/markets/create" icon="i-lucide-plus" color="neutral" variant="ghost" class="hover:text-primary transition-colors" />
 
         <div class="h-5 w-px bg-(--ui-border) mx-1" />
