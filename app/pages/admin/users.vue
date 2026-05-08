@@ -211,6 +211,15 @@ function formatDate(epoch: number) {
             <div v-if="scratcherLoading" class="text-sm text-muted">Loading...</div>
             <template v-else-if="scratcherData">
               <div class="rounded-lg border border-(--ui-border) divide-y divide-(--ui-border)">
+                <!-- Jackpots -->
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p class="text-sm">Jackpots won</p>
+                    <p class="text-xs text-muted mt-0.5">All time</p>
+                  </div>
+                  <span class="text-sm font-semibold tabular-nums">{{ scratcherData.jackpotsTotal }} 💎</span>
+                </div>
+
                 <!-- Paid -->
                 <div class="flex items-center justify-between px-4 py-3">
                   <div>
