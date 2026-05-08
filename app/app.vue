@@ -22,6 +22,7 @@ useSeoMeta({
 })
 
 const profileModalOpen = ref(false)
+const rulesModalOpen = ref(false)
 
 async function signOut() {
   await $fetch('/api/auth/signout', { method: 'POST' })
@@ -72,6 +73,7 @@ async function signOut() {
     <CategoryNav />
     <AuthModal />
     <ProfileModal v-model:open="profileModalOpen" />
+    <RulesModal v-model:open="rulesModalOpen" />
 
     <UMain>
       <NuxtPage />
