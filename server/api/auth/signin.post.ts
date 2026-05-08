@@ -24,6 +24,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Invalid email or password.' })
   }
 
+  if (user.banned) {
+    throw createError({ statusCode: 403, message: 'Your account has been banned.' })
+  }
+
   await setUserSession(event, {
     user: {
       userId: emailRecord.userId as string,
@@ -31,7 +35,8 @@ export default defineEventHandler(async (event) => {
       username: user.username as string,
       photo: (user.photo as string) || null,
       balance: user.balance as number,
-      isAdmin: isAdminEmail(normalized)
+      isAdmin: isAdminEmail(normalized),
+      mustChangePassword: (user.mustChangePassword as boolean) ?? false
     }
   })
 

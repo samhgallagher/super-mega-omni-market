@@ -6,6 +6,7 @@ declare module '#auth-utils' {
     photo: string | null
     balance: number
     isAdmin: boolean
+    mustChangePassword?: boolean
   }
 }
 export {}

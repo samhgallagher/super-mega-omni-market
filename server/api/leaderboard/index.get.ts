@@ -4,6 +4,7 @@ export default defineEventHandler(async (event) => {
   const items = await dbQueryGSI('GSI1', 'USERS', 'GSI1PK') as Array<Record<string, unknown>>
 
   const sorted = items
+    .filter(u => !u.banned)
     .sort((a, b) => (b.balance as number) - (a.balance as number))
     .slice(0, 50)
 

@@ -54,6 +54,7 @@ async function toggleHidden(market: NonNullable<typeof markets.value>[number]) {
       <h1 class="text-2xl font-bold">Admin</h1>
       <div class="flex gap-2 flex-wrap">
         <UButton to="/admin/settings" label="Settings" color="neutral" variant="ghost" icon="i-lucide-settings" />
+        <UButton to="/admin/users" label="Users" color="neutral" variant="outline" icon="i-lucide-users" />
         <UButton to="/admin/categories" label="Categories" color="neutral" variant="outline" icon="i-lucide-tag" />
         <UButton to="/admin/moderation" label="Moderation" color="neutral" variant="outline" icon="i-lucide-shield-check">
           <template v-if="pending?.length" #trailing>
