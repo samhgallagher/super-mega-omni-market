@@ -8,19 +8,18 @@ const rankLabel: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 <template>
   <UContainer class="py-8 max-w-xl">
-    <h1 class="text-2xl font-bold mb-6">Leaderboard</h1>
+    <h1 class="text-2xl font-bold mb-1">Leaderboard</h1>
+    <p class="text-xs text-muted mb-6">The top 3 accounts after the Sam/Grant Bowling Match market resolves are entitled
+      to 1 beer from
+      Sam during DB Days.</p>
 
     <div class="flex flex-col divide-y divide-(--ui-border) rounded-xl border border-(--ui-border) overflow-hidden">
       <div v-if="!entries?.length" class="p-8 text-sm text-muted text-center">
         No users yet.
       </div>
-      <NuxtLink
-        v-for="entry in entries"
-        :key="entry.userId"
-        :to="`/users/${entry.userId}`"
+      <NuxtLink v-for="entry in entries" :key="entry.userId" :to="`/users/${entry.userId}`"
         class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-(--ui-bg-elevated) group"
-        :class="entry.isCurrentUser ? 'bg-primary/5' : ''"
-      >
+        :class="entry.isCurrentUser ? 'bg-primary/5' : ''">
         <div class="w-8 text-center shrink-0">
           <span v-if="rankLabel[entry.rank]" class="text-lg leading-none">{{ rankLabel[entry.rank] }}</span>
           <span v-else class="text-sm text-muted font-medium tabular-nums">{{ entry.rank }}</span>
