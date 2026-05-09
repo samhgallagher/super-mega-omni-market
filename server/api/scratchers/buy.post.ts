@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
   const today = new Date().toISOString().split('T')[0]
   const allTickets = await dbQuery(`USER#${session.user.userId}`, 'SCRATCH#') as Array<Record<string, unknown>>
-  const ticketsToday = allTickets.filter(t => t.createdDate === today).length
+  const ticketsToday = allTickets.filter(t => t.createdDate === today && !t.free).length
 
   if (ticketsToday >= settings.scratcherDailyLimit) {
     throw createError({ statusCode: 400, message: `Daily limit of ${settings.scratcherDailyLimit} scratchers reached. Come back tomorrow!` })
